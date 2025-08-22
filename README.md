@@ -231,6 +231,35 @@ bun run type-check
 bun run test
 ```
 
+### Database Commands (D1)
+
+This project includes Cloudflare D1 database integration for production-ready data persistence:
+
+```bash
+# Setup D1 database (one-time setup)
+npm run db:setup
+
+# Development with D1 database
+npm run dev:d1
+
+# Database migrations
+npm run db:migrate          # Apply to production
+npm run db:migrate:local    # Apply to local development
+
+# Database status
+npm run db:status           # Check production migrations
+npm run db:status:local     # Check local migrations
+
+# Database shell access
+npm run db:shell "SELECT COUNT(*) FROM accounts"
+npm run db:shell:local "SELECT * FROM sleep_entries LIMIT 5"
+
+# Deploy to Cloudflare Workers
+npm run deploy
+```
+
+For complete D1 command reference, see [TURBO_D1_COMMANDS.md](./TURBO_D1_COMMANDS.md).
+
 ### Deployment
 
 Deplying each piece is very versatile and can be done numerous ways, and exploration into automating these will happen at a later date. Here are some references in the meantime.
@@ -242,9 +271,13 @@ Deplying each piece is very versatile and can be done numerous ways, and explora
 - [Cloudflare Pages](https://vite.dev/guide/static-deploy.html#cloudflare-pages)
 
 **Server**
-- [Cloudflare Worker](https://gist.github.com/stevedylandev/4aa1fc569bcba46b7169193c0498d0b3)
+- [Cloudflare Worker](https://gist.github.com/stevedylandev/4aa1fc569bcba46b7169193c0498d0b3) (Recommended for D1 integration)
 - [Bun](https://hono.dev/docs/getting-started/bun)
 - [Node.js](https://hono.dev/docs/getting-started/nodejs)
+
+**Database**
+- [Cloudflare D1](https://developers.cloudflare.com/d1/) - SQLite-compatible database at the edge
+- See [server/D1_MIGRATION.md](./server/D1_MIGRATION.md) for complete setup guide
 
 ## Type Sharing
 

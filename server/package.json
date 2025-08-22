@@ -1,17 +1,30 @@
 {
-  "name": "server",
-  "version": "0.0.1",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "bun --watch run src/index.ts && tsc --watch"
-  },
-  "dependencies": {
-    "hono": "^4.7.11",
-    "shared": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+	"name": "server",
+	"version": "0.0.1",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"dev": "bun --watch run src/index.ts",
+		"dev:d1": "wrangler dev --local src/index-d1.ts",
+		"build:d1": "tsc && wrangler deploy --dry-run",
+		"deploy": "tsc && wrangler deploy",
+		"db:setup": "node scripts/setup-d1.js",
+		"db:migrate": "node scripts/migrate.js",
+		"db:migrate:local": "node scripts/migrate.js --local",
+		"db:status": "node scripts/migrate.js status",
+		"db:status:local": "node scripts/migrate.js status --local",
+		"db:shell": "wrangler d1 execute sleep-tracker-db --command",
+		"db:shell:local": "wrangler d1 execute sleep-tracker-db --local --command",
+		"test:d1": "node test-d1.js"
+	},
+	"dependencies": {
+		"hono": "^4.7.11",
+		"shared": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@cloudflare/workers-types": "^4.20241218.0",
+		"wrangler": "^3.94.0"
+	}
 }

@@ -1,0 +1,28 @@
+# Cloudflare Workers configuration for Sleep Tracker API
+name = "sleep-tracker-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "bun run build"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "sleep-tracker-db"
+database_id = "replace-with-your-d1-database-id"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "1.0.0"
+
+# Development configuration
+[env.development]
+name = "sleep-tracker-api-dev"
+vars = { ENVIRONMENT = "development" }
+
+# Local development with D1
+[env.local]
+name = "sleep-tracker-api-local"
+vars = { ENVIRONMENT = "local" }

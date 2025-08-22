@@ -1,12 +1,17 @@
 /**
- * Authentication routes
+ * Authentication routes for D1 database
  */
 
 import { Hono } from "hono";
-import { db } from "../database";
+import type { D1Database as CloudflareD1Database } from "@cloudflare/workers-types";
+import { D1Database } from "../database-d1";
 import { generateChallenge, validatePublicKey } from "../crypto";
 
-const auth = new Hono();
+type Bindings = {
+	DB: CloudflareD1Database;
+};
+
+const auth = new Hono<{ Bindings: Bindings }>();
 
 /**
  * POST /auth/register
@@ -14,6 +19,9 @@ const auth = new Hono();
  */
 auth.post("/register", async (c) => {
 	try {
+		const { createD1Database } = await import("../database-d1");
+		const db = new D1Database(c.env.DB);
+
 		const body = await c.req.json();
 		const { publicKey } = body;
 
@@ -51,6 +59,9 @@ auth.post("/register", async (c) => {
  */
 auth.post("/challenge", async (c) => {
 	try {
+		const { createD1Database } = await import("../database-d1");
+		const db = new D1Database(c.env.DB);
+
 		const body = await c.req.json();
 		const { accountId } = body;
 
@@ -59,7 +70,8 @@ auth.post("/challenge", async (c) => {
 		}
 
 		// Check if account exists
-		if (!db.accountExists(accountId)) {
+		const accountExists = await db.accountExists(accountId);
+		if (!accountExists) {
 			return c.json({ error: "Account not found" }, 404);
 		}
 
@@ -68,7 +80,7 @@ auth.post("/challenge", async (c) => {
 		const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
 
 		// Store challenge
-		db.storeChallenge(accountId, challenge, expiresAt);
+		await db.storeChallenge(accountId, challenge, expiresAt);
 
 		return c.json({
 			challenge,
@@ -84,10 +96,12 @@ auth.post("/challenge", async (c) => {
 /**
  * POST /auth/verify
  * Verify a signed challenge (for testing purposes)
- * In practice, verification happens in the auth middleware
  */
 auth.post("/verify", async (c) => {
 	try {
+		const { createD1Database } = await import("../database-d1");
+		const db = new D1Database(c.env.DB);
+
 		const body = await c.req.json();
 		const { accountId, challenge, signature } = body;
 
@@ -99,13 +113,13 @@ auth.post("/verify", async (c) => {
 		}
 
 		// Get account
-		const account = db.getAccount(accountId);
+		const account = await db.getAccount(accountId);
 		if (!account) {
 			return c.json({ error: "Account not found" }, 404);
 		}
 
 		// Get challenge data
-		const challengeData = db.getChallenge(challenge);
+		const challengeData = await db.getChallenge(challenge);
 		if (!challengeData) {
 			return c.json({ error: "Invalid or expired challenge" }, 400);
 		}
@@ -138,9 +152,12 @@ auth.post("/verify", async (c) => {
  */
 auth.get("/account/:accountId", async (c) => {
 	try {
+		const { createD1Database } = await import("../database-d1");
+		const db = new D1Database(c.env.DB);
+
 		const accountId = c.req.param("accountId");
 
-		const account = db.getAccount(accountId);
+		const account = await db.getAccount(accountId);
 		if (!account) {
 			return c.json({ error: "Account not found" }, 404);
 		}

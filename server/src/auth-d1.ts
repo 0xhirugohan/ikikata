@@ -1,9 +1,10 @@
 /**
- * Authentication middleware and utilities
+ * Authentication middleware for D1 database
  */
 
 import type { Context, Next } from "hono";
-import { db } from "./database";
+import type { D1Database as CloudflareD1Database } from "@cloudflare/workers-types";
+import { D1Database, createD1Database } from "./database-d1";
 import { importPublicKey, verifySignature } from "./crypto";
 
 export interface AuthenticatedUser {
@@ -11,10 +12,21 @@ export interface AuthenticatedUser {
 	publicKey: string;
 }
 
+type Bindings = {
+	DB: CloudflareD1Database;
+};
+
+type Variables = {
+	user?: AuthenticatedUser;
+};
+
 /**
  * Authentication middleware - validates signature-based authentication
  */
-export async function requireAuth(c: Context, next: Next) {
+export async function requireAuth(
+	c: Context<{ Bindings: Bindings; Variables: Variables }>,
+	next: Next,
+) {
 	const authHeader = c.req.header("Authorization");
 
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -22,6 +34,8 @@ export async function requireAuth(c: Context, next: Next) {
 	}
 
 	try {
+		const db = createD1Database(c.env);
+
 		const token = authHeader.substring(7);
 		const [accountId, signature, challenge] = token.split(".");
 
@@ -30,13 +44,13 @@ export async function requireAuth(c: Context, next: Next) {
 		}
 
 		// Get account data
-		const account = db.getAccount(accountId);
+		const account = await db.getAccount(accountId);
 		if (!account) {
 			return c.json({ error: "Account not found" }, 401);
 		}
 
 		// Verify challenge exists and is not expired
-		const challengeData = db.getChallenge(challenge);
+		const challengeData = await db.getChallenge(challenge);
 		if (!challengeData) {
 			return c.json({ error: "Invalid or expired challenge" }, 401);
 		}
@@ -73,7 +87,7 @@ export async function requireAuth(c: Context, next: Next) {
 /**
  * Get authenticated user from context
  */
-export function getAuthenticatedUser(c: Context): AuthenticatedUser {
+export function getAuthenticatedUser(c: Context<{ Bindings: Bindings; Variables: Variables }>): AuthenticatedUser {
 	const user = c.get("user") as AuthenticatedUser;
 	if (!user) {
 		throw new Error("No authenticated user found in context");
