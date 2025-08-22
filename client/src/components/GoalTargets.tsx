@@ -26,7 +26,7 @@ export default function GoalTargets({ entries, isDarkMode }: Props) {
     const recentEntries = entries.slice(0, 21); // Last 3 weeks
 
     const sleepQualityGoal = recentEntries.filter(entry => 
-      entry.sleepQuality === 'good' || entry.sleepQuality === 'excellent'
+      entry.sleepQuality === 'good'
     ).length / recentEntries.length * 100;
 
     const morningEnergyGoal = recentEntries.filter(entry => 

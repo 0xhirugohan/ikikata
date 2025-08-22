@@ -161,7 +161,7 @@ const ExpandableQuestion = ({
   );
 };
 
-export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, _onDeleteEntry, isDarkMode, editEntryId, onEditComplete }: Props) {
+export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, onDeleteEntry: _onDeleteEntry, isDarkMode, editEntryId, onEditComplete }: Props) {
   const today = new Date().toISOString().split('T')[0];
   const stressLevelId = useId();
   const screenTimeId = useId();
@@ -295,7 +295,7 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
     }));
   };
 
-  const saveIndividualAnswer = (_questionKey: string, data: Partial<QuestionData>) => {
+  const saveIndividualAnswer = (data: Partial<QuestionData>) => {
     const newSavedAnswers = {
       ...savedAnswers,
       [today]: { ...savedAnswers[today], ...data }
@@ -419,7 +419,7 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
                 <button
                   type="button"
                   onClick={() => {
-                    saveIndividualAnswer('notes', { notes: formData.notes });
+                    saveIndividualAnswer({ notes: formData.notes });
                     toggleQuestion('notes');
                   }}
                   className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
