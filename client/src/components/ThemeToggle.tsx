@@ -6,6 +6,7 @@ interface Props {
 export default function ThemeToggle({ isDarkMode, onToggle }: Props) {
   return (
     <button
+      type="button"
       onClick={() => onToggle(!isDarkMode)}
       className={`relative w-16 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
         isDarkMode 

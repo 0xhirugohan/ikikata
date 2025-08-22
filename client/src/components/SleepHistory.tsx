@@ -1,4 +1,4 @@
-import { SleepEntry } from '../types/sleep';
+import type { SleepEntry } from '../types/sleep';
 import SleepCalendar from './SleepCalendar';
 
 interface SleepHistoryProps {

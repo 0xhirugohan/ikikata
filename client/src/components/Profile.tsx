@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 
 interface ProfileProps {
   isDarkMode: boolean;
 }
 
 export default function Profile({ isDarkMode }: ProfileProps) {
+  const emailId = useId();
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,6 +79,7 @@ export default function Profile({ isDarkMode }: ProfileProps) {
         </div>
 
         <button
+          type="button"
           onClick={handleLogout}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
             isDarkMode
@@ -114,7 +116,7 @@ export default function Profile({ isDarkMode }: ProfileProps) {
       <div className="space-y-4">
         <div>
           <label 
-            htmlFor="email" 
+            htmlFor={emailId} 
             className={`block text-sm font-medium mb-2 ${
               isDarkMode ? 'text-slate-300' : 'text-gray-700'
             }`}
@@ -123,7 +125,7 @@ export default function Profile({ isDarkMode }: ProfileProps) {
           </label>
           <input
             type="email"
-            id="email"
+            id={emailId}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
@@ -143,6 +145,7 @@ export default function Profile({ isDarkMode }: ProfileProps) {
         </div>
 
         <button
+          type="button"
           onClick={handleLogin}
           disabled={!email.trim() || isLoading}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${

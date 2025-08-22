@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SleepEntry, SleepAnalytics as SleepAnalyticsType } from '../types/sleep';
+import type { SleepEntry, SleepAnalytics as SleepAnalyticsType } from '../types/sleep';
 import SleepHistory from './SleepHistory';
 
 interface Props {
@@ -220,6 +220,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
             isDarkMode ? 'border-slate-600' : 'border-gray-300'
           }`}>
             <button
+              type="button"
               onClick={() => setViewMode('analytics')}
               className={`flex-1 px-4 py-2 text-sm rounded-l-lg transition-colors ${
                 viewMode === 'analytics'
@@ -234,6 +235,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
               📊 Analytics
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('history')}
               className={`flex-1 px-4 py-2 text-sm rounded-r-lg transition-colors ${
                 viewMode === 'history'
@@ -272,6 +274,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
           isDarkMode ? 'border-slate-600' : 'border-gray-300'
         }`}>
           <button
+            type="button"
             onClick={() => setViewMode('analytics')}
             className={`flex-1 px-4 py-2 text-sm rounded-l-lg transition-colors ${
               viewMode === 'analytics'
@@ -286,6 +289,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
             📊 Analytics
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('history')}
             className={`flex-1 px-4 py-2 text-sm rounded-r-lg transition-colors ${
               viewMode === 'history'
@@ -320,6 +324,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
 
       <div className="grid grid-cols-2 gap-6">
         <button
+          type="button"
           onClick={() => setSelectedMetric('sleepQuality')}
           className={`p-4 rounded-lg text-left transition-all hover:scale-105 hover:shadow-md ${
             isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-50 hover:bg-gray-100'
@@ -334,6 +339,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
         </button>
 
         <button
+          type="button"
           onClick={() => setSelectedMetric('morningEnergy')}
           className={`p-4 rounded-lg text-left transition-all hover:scale-105 hover:shadow-md ${
             isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-50 hover:bg-gray-100'
@@ -348,6 +354,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
         </button>
 
         <button
+          type="button"
           onClick={() => setSelectedMetric('sleepOnset')}
           className={`p-4 rounded-lg text-left transition-all hover:scale-105 hover:shadow-md ${
             isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-50 hover:bg-gray-100'
@@ -362,6 +369,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
         </button>
 
         <button
+          type="button"
           onClick={() => setSelectedMetric('streak')}
           className={`p-4 rounded-lg text-left transition-all hover:scale-105 hover:shadow-md ${
             isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-50 hover:bg-gray-100'
@@ -385,8 +393,8 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
           <div>
             <h4 className="font-medium mb-2">Sleep Quality Trend (Last 7 Days)</h4>
             <div className="flex space-x-1">
-              {recentEntries.slice(0, 7).reverse().map((entry, index) => (
-                <div key={index} className="flex flex-col items-center">
+              {recentEntries.slice(0, 7).reverse().map((entry) => (
+                <div key={entry.id} className="flex flex-col items-center">
                   <div 
                     className={`w-8 h-16 rounded-sm ${
                       qualityToNumber[entry.sleepQuality] >= 3 
@@ -438,8 +446,8 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
           💡 Recommendations
         </h3>
         <ul className="space-y-3">
-          {analytics.recommendations.map((rec, index) => (
-            <li key={index} className="flex items-start space-x-3">
+          {analytics.recommendations.map((rec) => (
+            <li key={rec} className="flex items-start space-x-3">
               <span className={`text-sm ${isDarkMode ? 'text-purple-400' : 'text-orange-500'}`}>•</span>
               <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>{rec}</span>
             </li>
@@ -470,7 +478,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
               </tr>
             </thead>
             <tbody>
-              {recentEntries.slice(0, 7).map((entry, index) => (
+              {recentEntries.slice(0, 7).map((entry, _index) => (
                 <tr key={entry.id} className={`border-b ${isDarkMode ? 'border-slate-600' : 'border-gray-200'}`}>
                   <td className="py-3">
                     <div>
@@ -510,7 +518,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
                   <td className="py-3 text-center">
                     <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>
                       {entry.timeToFallAsleep.includes('-') 
-                        ? entry.timeToFallAsleep.split('-')[0] + 'm'
+                        ? `${entry.timeToFallAsleep.split('-')[0]}m`
                         : entry.timeToFallAsleep.includes('under') 
                         ? '<10m'
                         : '60m+'
@@ -537,6 +545,7 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
                 {metricExplanations[selectedMetric as keyof typeof metricExplanations]?.title}
               </h3>
               <button
+                type="button"
                 onClick={() => setSelectedMetric(null)}
                 className={`text-xl ${isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-gray-500 hover:text-gray-700'}`}
               >
@@ -554,8 +563,8 @@ export default function SleepAnalytics({ entries, isDarkMode, onEditEntry, onDel
                   Scoring System:
                 </h4>
                 <div className="space-y-2">
-                  {metricExplanations[selectedMetric as keyof typeof metricExplanations]?.scoring.map((item, index) => (
-                    <div key={index} className={`p-3 rounded border ${
+                  {metricExplanations[selectedMetric as keyof typeof metricExplanations]?.scoring.map((item) => (
+                    <div key={`${item.value}-${item.label}`} className={`p-3 rounded border ${
                       isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'
                     }`}>
                       <div className="flex items-start space-x-3">

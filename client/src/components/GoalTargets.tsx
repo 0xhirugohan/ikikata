@@ -1,4 +1,4 @@
-import { SleepEntry } from '../types/sleep';
+import type { SleepEntry } from '../types/sleep';
 
 interface Props {
   entries: SleepEntry[];
@@ -243,8 +243,8 @@ export default function GoalTargets({ entries, isDarkMode }: Props) {
           🎯 Goal-Focused Recommendations
         </h3>
         <ul className="space-y-3">
-          {getRecommendationsForGoals().map((rec, index) => (
-            <li key={index} className="flex items-start space-x-3">
+          {getRecommendationsForGoals().map((rec) => (
+            <li key={rec} className="flex items-start space-x-3">
               <span className={`text-sm ${isDarkMode ? 'text-purple-400' : 'text-orange-500'}`}>•</span>
               <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>{rec}</span>
             </li>

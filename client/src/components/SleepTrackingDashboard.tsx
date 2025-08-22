@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SleepEntry } from '../types/sleep';
+import type { SleepEntry } from '../types/sleep';
 import DailyTrackingForm from './DailyTrackingForm';
 import SleepAnalytics from './SleepAnalytics';
 import Profile from './Profile';
@@ -130,6 +130,7 @@ export default function SleepTrackingDashboard() {
             { id: 'profile', label: 'Profile', icon: '👤' }
           ].map(tab => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex-1 flex flex-col items-center py-3 px-2 transition-all duration-200 ${

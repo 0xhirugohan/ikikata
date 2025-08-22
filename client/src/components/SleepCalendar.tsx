@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SleepEntry } from '../types/sleep';
+import type { SleepEntry } from '../types/sleep';
 
 interface SleepCalendarProps {
   entries: SleepEntry[];
@@ -14,11 +14,6 @@ const qualityToColor = {
   poor: 'bg-red-500'
 };
 
-const qualityToNumber = {
-  good: 3,
-  fair: 2,
-  poor: 1
-};
 
 export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isDarkMode }: SleepCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -105,6 +100,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
         <div className="flex items-center space-x-4">
           <h3 className="text-lg font-semibold">{monthName}</h3>
           <button
+            type="button"
             onClick={goToToday}
             className={`text-sm px-3 py-1 rounded transition-colors ${
               isDarkMode
@@ -117,6 +113,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
         </div>
         <div className="flex items-center space-x-2">
           <button
+            type="button"
             onClick={() => navigateMonth('prev')}
             className={`p-2 rounded transition-colors ${
               isDarkMode
@@ -127,6 +124,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
             ←
           </button>
           <button
+            type="button"
             onClick={() => navigateMonth('next')}
             className={`p-2 rounded transition-colors ${
               isDarkMode
@@ -166,6 +164,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
 
             return (
               <button
+                type="button"
                 key={`${dayObj.date.getTime()}-${index}`}
                 onClick={() => entry && setSelectedEntry(entry)}
                 className={`h-16 p-2 border-r border-b transition-all ${
@@ -232,6 +231,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
                 })}
               </h3>
               <button
+                type="button"
                 onClick={() => setSelectedEntry(null)}
                 className={`text-xl ${isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-gray-500 hover:text-gray-700'}`}
               >
@@ -306,6 +306,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
 
             <div className="flex gap-3 mt-6">
               <button
+                type="button"
                 onClick={() => {
                   onEditEntry(selectedEntry);
                   setSelectedEntry(null);
@@ -319,6 +320,7 @@ export default function SleepCalendar({ entries, onEditEntry, onDeleteEntry, isD
                 Edit
               </button>
               <button
+                type="button"
                 onClick={() => {
                   onDeleteEntry(selectedEntry.id);
                   setSelectedEntry(null);

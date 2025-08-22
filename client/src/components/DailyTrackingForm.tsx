@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { SleepEntry, SleepQuality, EnergyLevel, SleepOnsetTime } from '../types/sleep';
+import { useState, useEffect, useId, useCallback } from 'react';
+import type { SleepEntry, SleepQuality, EnergyLevel, SleepOnsetTime } from '../types/sleep';
 
 interface QuestionData {
   sleepQuality?: SleepQuality;
@@ -47,8 +47,126 @@ const sleepOnsetOptions = [
   { value: 'over-60', label: 'Over 60 minutes', description: 'Significant sleep problem' }
 ] as const;
 
-export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, onDeleteEntry, isDarkMode, editEntryId, onEditComplete }: Props) {
+interface ExpandableQuestionProps {
+  questionId: string;
+  title: string; 
+  options: readonly { value: string; label: string; description: string }[]; 
+  value: string; 
+  onChange: (value: string) => void; 
+  name: string;
+  onSave: (data: Partial<QuestionData>) => void;
+  isDarkMode: boolean;
+  expandedQuestions: Record<string, boolean>;
+  toggleQuestion: (questionId: string) => void;
+}
+
+const ExpandableQuestion = ({ 
+  questionId,
+  title, 
+  options, 
+  value, 
+  onChange, 
+  name,
+  onSave,
+  isDarkMode,
+  expandedQuestions,
+  toggleQuestion
+}: ExpandableQuestionProps) => {
+  const isExpanded = expandedQuestions[questionId];
+  const hasValue = value !== '';
+  
+  return (
+    <div className={`border rounded-lg ${isDarkMode ? 'border-slate-600' : 'border-gray-300'}`}>
+      <button
+        type="button"
+        onClick={() => toggleQuestion(questionId)}
+        className={`w-full flex items-center justify-between p-4 text-left ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-50'}`}
+      >
+        <div className="flex items-center space-x-3">
+          <span className={`text-sm font-medium ${
+            hasValue 
+              ? isDarkMode ? 'text-green-400' : 'text-green-600'
+              : isDarkMode ? 'text-slate-400' : 'text-gray-500'
+          }`}>
+            {hasValue ? '✓' : '○'}
+          </span>
+          <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>
+            {title}
+          </span>
+          {hasValue && (
+            <span className={`text-sm capitalize px-2 py-1 rounded ${isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-gray-100 text-gray-600'}`}>
+              {value.replace('-', ' ')}
+            </span>
+          )}
+        </div>
+        <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+          ↓
+        </span>
+      </button>
+      
+      {isExpanded && (
+        <div className={`p-4 border-t ${isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-200 bg-gray-50'}`}>
+          <div className="space-y-2 mb-4">
+            {options.map(option => (
+              <label key={option.value} className={`flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition-all ${
+                value === option.value
+                  ? isDarkMode
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-orange-100 border-orange-300'
+                  : isDarkMode
+                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                    : 'bg-white hover:bg-gray-50 border-gray-200'
+              } border`}>
+                <input
+                  type="radio"
+                  name={name}
+                  value={option.value}
+                  checked={value === option.value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="mt-1"
+                />
+                <div>
+                  <div className="font-medium">{option.label}</div>
+                  <div className={`text-sm ${
+                    value === option.value
+                      ? isDarkMode ? 'text-purple-100' : 'text-orange-700'
+                      : isDarkMode ? 'text-slate-400' : 'text-gray-500'
+                  }`}>
+                    {option.description}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          
+          {value && (
+            <button
+              type="button"
+              onClick={() => {
+                onSave({ [name]: value as SleepQuality | EnergyLevel | SleepOnsetTime });
+                toggleQuestion(questionId);
+              }}
+              className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                isDarkMode
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              Save Answer
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, _onDeleteEntry, isDarkMode, editEntryId, onEditComplete }: Props) {
   const today = new Date().toISOString().split('T')[0];
+  const stressLevelId = useId();
+  const screenTimeId = useId();
+  const roomTempId = useId();
+  const caffeineTimeId = useId();
   const [formData, setFormData] = useState({
     sleepQuality: '' as SleepQuality | '',
     morningEnergy: '' as EnergyLevel | '',
@@ -71,6 +189,25 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
     return saved ? JSON.parse(saved) : {};
   });
 
+  const editEntry = useCallback((entry: SleepEntry) => {
+    setFormData({
+      sleepQuality: entry.sleepQuality,
+      morningEnergy: entry.morningEnergy,
+      timeToFallAsleep: entry.timeToFallAsleep,
+      afternoonEnergy: entry.afternoonEnergy,
+      notes: entry.notes,
+      stressLevel: entry.stressLevel?.toString() || '',
+      screenTime: entry.screenTime?.toString() || '',
+      roomTemp: entry.roomTemp?.toString() || '',
+      caffeineTime: entry.caffeineTime || '',
+      exerciseTime: entry.exerciseTime || '',
+      preBedtimeActivities: entry.preBedtimeActivities || '',
+      anxietyLevel: entry.anxietyLevel?.toString() || ''
+    });
+    setEditingId(entry.id);
+    setExpandedQuestions({ sleepQuality: true, morningEnergy: true, timeToFallAsleep: true, afternoonEnergy: true, notes: true, advanced: true });
+  }, []);
+
   // Handle edit entry from URL parameter
   useEffect(() => {
     if (editEntryId) {
@@ -79,7 +216,7 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
         editEntry(entryToEdit);
       }
     }
-  }, [editEntryId, entries]);
+  }, [editEntryId, entries, editEntry]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,25 +268,6 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
     setExpandedQuestions({});
   };
 
-  const editEntry = (entry: SleepEntry) => {
-    setFormData({
-      sleepQuality: entry.sleepQuality,
-      morningEnergy: entry.morningEnergy,
-      timeToFallAsleep: entry.timeToFallAsleep,
-      afternoonEnergy: entry.afternoonEnergy,
-      notes: entry.notes,
-      stressLevel: entry.stressLevel?.toString() || '',
-      screenTime: entry.screenTime?.toString() || '',
-      roomTemp: entry.roomTemp?.toString() || '',
-      caffeineTime: entry.caffeineTime || '',
-      exerciseTime: entry.exerciseTime || '',
-      preBedtimeActivities: entry.preBedtimeActivities || '',
-      anxietyLevel: entry.anxietyLevel?.toString() || ''
-    });
-    setEditingId(entry.id);
-    setExpandedQuestions({ sleepQuality: true, morningEnergy: true, timeToFallAsleep: true, afternoonEnergy: true, notes: true, advanced: true });
-  };
-
   const cancelEdit = () => {
     setEditingId(null);
     setFormData({
@@ -177,7 +295,7 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
     }));
   };
 
-  const saveIndividualAnswer = (questionKey: string, data: Partial<QuestionData>) => {
+  const saveIndividualAnswer = (_questionKey: string, data: Partial<QuestionData>) => {
     const newSavedAnswers = {
       ...savedAnswers,
       [today]: { ...savedAnswers[today], ...data }
@@ -185,112 +303,6 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
     
     setSavedAnswers(newSavedAnswers);
     localStorage.setItem('sleepAnswers', JSON.stringify(newSavedAnswers));
-  };
-
-  const ExpandableQuestion = ({ 
-    questionId,
-    title, 
-    options, 
-    value, 
-    onChange, 
-    name,
-    onSave
-  }: { 
-    questionId: string;
-    title: string; 
-    options: readonly { value: string; label: string; description: string }[]; 
-    value: string; 
-    onChange: (value: string) => void; 
-    name: string;
-    onSave: (data: Partial<QuestionData>) => void;
-  }) => {
-    const isExpanded = expandedQuestions[questionId];
-    const hasValue = value !== '';
-    
-    return (
-      <div className={`border rounded-lg ${isDarkMode ? 'border-slate-600' : 'border-gray-300'}`}>
-        <button
-          type="button"
-          onClick={() => toggleQuestion(questionId)}
-          className={`w-full flex items-center justify-between p-4 text-left ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-50'}`}
-        >
-          <div className="flex items-center space-x-3">
-            <span className={`text-sm font-medium ${
-              hasValue 
-                ? isDarkMode ? 'text-green-400' : 'text-green-600'
-                : isDarkMode ? 'text-slate-400' : 'text-gray-500'
-            }`}>
-              {hasValue ? '✓' : '○'}
-            </span>
-            <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>
-              {title}
-            </span>
-            {hasValue && (
-              <span className={`text-sm capitalize px-2 py-1 rounded ${isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-gray-100 text-gray-600'}`}>
-                {value.replace('-', ' ')}
-              </span>
-            )}
-          </div>
-          <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-            ↓
-          </span>
-        </button>
-        
-        {isExpanded && (
-          <div className={`p-4 border-t ${isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-200 bg-gray-50'}`}>
-            <div className="space-y-2 mb-4">
-              {options.map(option => (
-                <label key={option.value} className={`flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition-all ${
-                  value === option.value
-                    ? isDarkMode
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-orange-100 border-orange-300'
-                    : isDarkMode
-                      ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                      : 'bg-white hover:bg-gray-50 border-gray-200'
-                } border`}>
-                  <input
-                    type="radio"
-                    name={name}
-                    value={option.value}
-                    checked={value === option.value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="font-medium">{option.label}</div>
-                    <div className={`text-sm ${
-                      value === option.value
-                        ? isDarkMode ? 'text-purple-100' : 'text-orange-700'
-                        : isDarkMode ? 'text-slate-400' : 'text-gray-500'
-                    }`}>
-                      {option.description}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-            
-            {value && (
-              <button
-                type="button"
-                onClick={() => {
-                  onSave({ [name]: value as any });
-                  toggleQuestion(questionId);
-                }}
-                className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isDarkMode
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
-                }`}
-              >
-                Save Answer
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -316,6 +328,9 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
             onChange={(value) => setFormData(prev => ({ ...prev, sleepQuality: value as SleepQuality }))}
             name="sleepQuality"
             onSave={saveIndividualAnswer}
+            isDarkMode={isDarkMode}
+            expandedQuestions={expandedQuestions}
+            toggleQuestion={toggleQuestion}
           />
 
           <ExpandableQuestion
@@ -326,6 +341,9 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
             onChange={(value) => setFormData(prev => ({ ...prev, morningEnergy: value as EnergyLevel }))}
             name="morningEnergy"
             onSave={saveIndividualAnswer}
+            isDarkMode={isDarkMode}
+            expandedQuestions={expandedQuestions}
+            toggleQuestion={toggleQuestion}
           />
 
           <ExpandableQuestion
@@ -336,6 +354,9 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
             onChange={(value) => setFormData(prev => ({ ...prev, timeToFallAsleep: value as SleepOnsetTime }))}
             name="timeToFallAsleep"
             onSave={saveIndividualAnswer}
+            isDarkMode={isDarkMode}
+            expandedQuestions={expandedQuestions}
+            toggleQuestion={toggleQuestion}
           />
 
           <ExpandableQuestion
@@ -346,6 +367,9 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
             onChange={(value) => setFormData(prev => ({ ...prev, afternoonEnergy: value as EnergyLevel }))}
             name="afternoonEnergy"
             onSave={saveIndividualAnswer}
+            isDarkMode={isDarkMode}
+            expandedQuestions={expandedQuestions}
+            toggleQuestion={toggleQuestion}
           />
         </div>
 
@@ -426,10 +450,11 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
             isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
           }`}>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+              <label htmlFor={stressLevelId} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                 Stress Level (1-10)
               </label>
               <input
+                id={stressLevelId}
                 type="number"
                 min="1"
                 max="10"
@@ -443,10 +468,11 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+              <label htmlFor={screenTimeId} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                 Screen Time (hours before bed)
               </label>
               <input
+                id={screenTimeId}
                 type="number"
                 step="0.5"
                 min="0"
@@ -460,10 +486,11 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+              <label htmlFor={roomTempId} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                 Room Temperature (°F)
               </label>
               <input
+                id={roomTempId}
                 type="number"
                 value={formData.roomTemp}
                 onChange={(e) => setFormData(prev => ({ ...prev, roomTemp: e.target.value }))}
@@ -475,10 +502,11 @@ export default function DailyTrackingForm({ onAddEntry, entries, onUpdateEntry, 
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+              <label htmlFor={caffeineTimeId} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                 Last Caffeine Time
               </label>
               <input
+                id={caffeineTimeId}
                 type="time"
                 value={formData.caffeineTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, caffeineTime: e.target.value }))}
